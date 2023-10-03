@@ -21,7 +21,7 @@ function OvationProvider(options) {
             }
         }
     });
-    console.log('makeUtils', 'get', get);
+    // console.log('makeUtils', 'get', get)
     async function get_info(_msg) {
         return {
             ok: true,
@@ -45,11 +45,16 @@ function OvationProvider(options) {
                     ...(msg.ent.data$(false)),
                     //}
                 };
+                // console.log('GARETH123')
+                // console.log(msg)
                 let json = await post(makeUrl('api/Code'), {
-                    body
+                    body,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
                 });
-                console.log('SAVE CODE JSON', json);
-                let entdata = json.data;
+                // console.log('SAVE CODE JSON', json)
+                let entdata = json;
                 //entdata.id = entdata.customer_id
                 return entize(entdata);
             }
@@ -61,7 +66,7 @@ function OvationProvider(options) {
         };
     entityBuilder(this, {
         provider: {
-            name: 'ovation',
+            name: 'ovationincentives',
         },
         entity
     });
@@ -79,7 +84,7 @@ function OvationProvider(options) {
                     method: 'POST',
                     headers: {
                         Authorization: seneca.shared.headers.Authorization,
-                        'Content-Type': 'application/x-www-url-form-encoded',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                         //'X-Client-Id': seneca.shared.clientid
                     },
                     body: `grant_type=client_credentials&scope=ovation_sandbox`
@@ -87,13 +92,13 @@ function OvationProvider(options) {
                 let accessResult = await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig);
                 // console.log('ACCESS RES', accessConfig, accessResult)
                 // console.log('access res', accessResult.status)
-                if (401 === accessResult.status) {
+                if (401 === accessResult.status || 403 === accessResult.status) {
                     refreshToken = null;
                     return true;
                 }
                 let accessJSON = await accessResult.json();
                 // console.log('ACCESS JSON', accessJSON)
-                let accessToken = accessJSON.data.access_token;
+                let accessToken = accessJSON.access_token;
                 let store = asyncLocalStorage.getStore();
                 // console.log('store', store)
                 let currentConfig = store.config;

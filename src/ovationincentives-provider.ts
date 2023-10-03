@@ -46,7 +46,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
   })
 
 
-  console.log('makeUtils', 'get', get)
+  // console.log('makeUtils', 'get', get)
 
   async function get_info(this: any, _msg: any) {
     return {
@@ -71,15 +71,15 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
       try {
         let body = {
           //customer_context: {
-            //...(options.entity?.customer?.save || {}),
-            ...(msg.ent.data$(false)),
+          //...(options.entity?.customer?.save || {}),
+          ...(msg.ent.data$(false)),
           //}
         }
 
 
-        console.log('GARETH123')
+        // console.log('GARETH123')
 
-        console.log(msg)
+        // console.log(msg)
 
         let json = await post(makeUrl('api/Code'), {
           body,
@@ -88,7 +88,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           }
         },)
 
-        console.log('SAVE CODE JSON', json)
+        // console.log('SAVE CODE JSON', json)
         let entdata = json
         //entdata.id = entdata.customer_id
         return entize(entdata)
@@ -122,48 +122,48 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 
     if (401 === response.status) {
       try {
-          // console.log('GET ACCESS', config.headers)
+        // console.log('GET ACCESS', config.headers)
 
-          let accessConfig = {
-            method: 'POST',
-            headers: {
-              Authorization: seneca.shared.headers.Authorization,
-              'Content-Type': 'application/x-www-form-urlencoded',
-              //'X-Client-Id': seneca.shared.clientid
-            },
-            body: `grant_type=client_credentials&scope=ovation_sandbox`
-          }
-          let accessResult =
-            await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
+        let accessConfig = {
+          method: 'POST',
+          headers: {
+            Authorization: seneca.shared.headers.Authorization,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            //'X-Client-Id': seneca.shared.clientid
+          },
+          body: `grant_type=client_credentials&scope=ovation_sandbox`
+        }
+        let accessResult =
+          await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
 
-          // console.log('ACCESS RES', accessConfig, accessResult)
+        // console.log('ACCESS RES', accessConfig, accessResult)
 
-          // console.log('access res', accessResult.status)
-          if (401 === accessResult.status || 403 === accessResult.status) {
-            refreshToken = null
-            return true
-          }
-
-          let accessJSON = await accessResult.json()
-          console.log('ACCESS JSON', accessJSON)
-
-          let accessToken = accessJSON.access_token
-
-          let store = asyncLocalStorage.getStore()
-          // console.log('store', store)
-          let currentConfig = store.config
-
-          let authContent = 'Bearer ' + accessToken
-
-          currentConfig.headers['Authorization'] = authContent
-          config.headers['Authorization'] = authContent
-
-          currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
-          config.headers['X-Client-Id'] = seneca.shared.clientid
-
-          // console.log('store end', store)
-
+        // console.log('access res', accessResult.status)
+        if (401 === accessResult.status || 403 === accessResult.status) {
+          refreshToken = null
           return true
+        }
+
+        let accessJSON = await accessResult.json()
+        // console.log('ACCESS JSON', accessJSON)
+
+        let accessToken = accessJSON.access_token
+
+        let store = asyncLocalStorage.getStore()
+        // console.log('store', store)
+        let currentConfig = store.config
+
+        let authContent = 'Bearer ' + accessToken
+
+        currentConfig.headers['Authorization'] = authContent
+        config.headers['Authorization'] = authContent
+
+        currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
+        config.headers['X-Client-Id'] = seneca.shared.clientid
+
+        // console.log('store end', store)
+
+        return true
 
       }
       catch (e) {
