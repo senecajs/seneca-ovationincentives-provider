@@ -5,6 +5,8 @@ const Pkg = require('../package.json')
 
 type OvationProviderOptions = {
   url: string
+  authurl: string
+  proxyurl: string
   fetch: any
   debug: boolean
   entity: Record<string, Record<string, any>>
@@ -19,7 +21,9 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 
   // Shared config reference.
   const config: any = {
-    headers: {}
+    headers: {
+      'x-unbx-proxy-url': options.url
+    }
   }
 
   let refreshToken: any
@@ -35,7 +39,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
     asyncLocalStorage,
   } = makeUtils({
     name: 'ovation',
-    url: options.url,
+    url: ('' == options.proxyurl ? options.url : options.proxyurl),
     config,
     retry: {
       config: {
@@ -129,12 +133,15 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           headers: {
             Authorization: seneca.shared.headers.Authorization,
             'Content-Type': 'application/x-www-form-urlencoded',
-            //'X-Client-Id': seneca.shared.clientid
+            'x-unbx-proxy-url': options.authurl
           },
           body: `grant_type=client_credentials&scope=ovation_sandbox`
         }
+
+
+        let url = '' == options.proxyurl ? options.authurl : options.proxyurl
         let accessResult =
-          await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
+          await origFetcher(url, accessConfig)
 
         // console.log('ACCESS RES', accessConfig, accessResult)
 
@@ -210,6 +217,10 @@ const defaults: OvationProviderOptions = {
 
   // NOTE: include trailing /
   url: 'https://external-sandbox.ovationincentives.com/',
+
+  authurl: 'https://auth.ovationincentives.com/connect/token',
+
+  proxyurl: '',
 
   // Use global fetch by default - if exists
   fetch: ('undefined' === typeof fetch ? undefined : fetch),

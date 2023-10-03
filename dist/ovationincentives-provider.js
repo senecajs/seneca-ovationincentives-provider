@@ -6,13 +6,15 @@ function OvationProvider(options) {
     const seneca = this;
     // Shared config reference.
     const config = {
-        headers: {}
+        headers: {
+            'x-unbx-proxy-url': options.url
+        }
     };
     let refreshToken;
     const makeUtils = this.export('provider/makeUtils');
     const { makeUrl, get, post, entityBuilder, origFetcher, asyncLocalStorage, } = makeUtils({
         name: 'ovation',
-        url: options.url,
+        url: ('' == options.proxyurl ? options.url : options.proxyurl),
         config,
         retry: {
             config: {
@@ -85,11 +87,12 @@ function OvationProvider(options) {
                     headers: {
                         Authorization: seneca.shared.headers.Authorization,
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        //'X-Client-Id': seneca.shared.clientid
+                        'x-unbx-proxy-url': options.authurl
                     },
                     body: `grant_type=client_credentials&scope=ovation_sandbox`
                 };
-                let accessResult = await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig);
+                let url = '' == options.proxyurl ? options.authurl : options.proxyurl;
+                let accessResult = await origFetcher(url, accessConfig);
                 // console.log('ACCESS RES', accessConfig, accessResult)
                 // console.log('access res', accessResult.status)
                 if (401 === accessResult.status || 403 === accessResult.status) {
@@ -139,6 +142,8 @@ function OvationProvider(options) {
 const defaults = {
     // NOTE: include trailing /
     url: 'https://external-sandbox.ovationincentives.com/',
+    authurl: 'https://auth.ovationincentives.com/connect/token',
+    proxyurl: '',
     // Use global fetch by default - if exists
     fetch: ('undefined' === typeof fetch ? undefined : fetch),
     // TODO: Enable debug logging

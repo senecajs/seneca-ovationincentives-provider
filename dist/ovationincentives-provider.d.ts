@@ -1,5 +1,7 @@
 type OvationProviderOptions = {
     url: string;
+    authurl: string;
+    proxyurl: string;
     fetch: any;
     debug: boolean;
     entity: Record<string, Record<string, any>>;
