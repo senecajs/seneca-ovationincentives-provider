@@ -7,14 +7,14 @@ function OvationProvider(options) {
     // Shared config reference.
     const config = {
         headers: {
-            'x-unbx-proxy-url': options.url
+            'x-ovationincentives-proxy-url': options.url
         }
     };
     let refreshToken;
     const makeUtils = this.export('provider/makeUtils');
     const { makeUrl, get, post, entityBuilder, origFetcher, asyncLocalStorage, } = makeUtils({
         name: 'ovation',
-        url: ('' == options.proxyurl ? options.url : options.proxyurl),
+        url: resolveProxyUrl(options.url, options.proxyurl),
         config,
         retry: {
             config: {
@@ -87,11 +87,11 @@ function OvationProvider(options) {
                     headers: {
                         Authorization: seneca.shared.headers.Authorization,
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'x-unbx-proxy-url': options.authurl
+                        'x-ovationincentives-proxy-url': options.authurl
                     },
                     body: `grant_type=client_credentials&scope=ovation_sandbox`
                 };
-                let url = '' == options.proxyurl ? options.authurl : options.proxyurl;
+                let url = resolveProxyUrl(options.authurl, options.proxyurl);
                 let accessResult = await origFetcher(url, accessConfig);
                 // console.log('ACCESS RES', accessConfig, accessResult)
                 // console.log('access res', accessResult.status)
@@ -132,6 +132,13 @@ function OvationProvider(options) {
             Authorization: 'Basic ' + auth
         };
     });
+    function resolveProxyUrl(targeturl, proxyurl) {
+        if (null == proxyurl || '' == proxyurl) {
+            return targeturl;
+        }
+        let tu = new URL(targeturl);
+        return proxyurl.replace(/\/$/, '') + tu.pathname;
+    }
     return {
         exports: {
             sdk: () => null

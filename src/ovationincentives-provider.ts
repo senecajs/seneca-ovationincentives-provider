@@ -22,7 +22,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
   // Shared config reference.
   const config: any = {
     headers: {
-      'x-unbx-proxy-url': options.url
+      'x-ovationincentives-proxy-url': options.url
     }
   }
 
@@ -39,7 +39,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
     asyncLocalStorage,
   } = makeUtils({
     name: 'ovation',
-    url: ('' == options.proxyurl ? options.url : options.proxyurl),
+    url: resolveProxyUrl(options.url, options.proxyurl),
     config,
     retry: {
       config: {
@@ -133,13 +133,13 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           headers: {
             Authorization: seneca.shared.headers.Authorization,
             'Content-Type': 'application/x-www-form-urlencoded',
-            'x-unbx-proxy-url': options.authurl
+            'x-ovationincentives-proxy-url': options.authurl
           },
           body: `grant_type=client_credentials&scope=ovation_sandbox`
         }
 
 
-        let url = '' == options.proxyurl ? options.authurl : options.proxyurl
+        let url = resolveProxyUrl(options.authurl, options.proxyurl)
         let accessResult =
           await origFetcher(url, accessConfig)
 
@@ -203,6 +203,16 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
     }
 
   })
+
+
+  function resolveProxyUrl(targeturl: string, proxyurl: string) {
+    if (null == proxyurl || '' == proxyurl) {
+      return targeturl
+    }
+
+    let tu = new URL(targeturl)
+    return proxyurl.replace(/\/$/, '') + tu.pathname
+  }
 
   return {
     exports: {
