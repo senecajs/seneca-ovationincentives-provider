@@ -22,7 +22,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
   // Shared config reference.
   const config: any = {
     headers: {
-      'x-ovationincentives-proxy-url': options.url
+      // 'x-ovationincentives-proxy-url': options.url
     }
   }
 
@@ -84,11 +84,13 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
         // console.log('GARETH123')
 
         // console.log(msg)
-
-        let json = await post(makeUrl('api/Code'), {
+        let url = makeUrl('api/Code')
+        let requrl = resolveProxyUrl(url, options.proxyurl)
+        let json = await post(requrl, {
           body,
           headers: {
             'Content-Type': 'application/json',
+            'x-ovationincentives-proxy-url': url,
           }
         },)
 
