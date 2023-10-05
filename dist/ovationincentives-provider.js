@@ -14,7 +14,7 @@ function OvationProvider(options) {
     const makeUtils = this.export('provider/makeUtils');
     const { makeUrl, get, post, entityBuilder, origFetcher, asyncLocalStorage, } = makeUtils({
         name: 'ovation',
-        url: resolveProxyUrl(options.url, options.proxyurl),
+        url: options.url,
         config,
         retry: {
             config: {

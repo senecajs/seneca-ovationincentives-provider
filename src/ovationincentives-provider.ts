@@ -39,7 +39,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
     asyncLocalStorage,
   } = makeUtils({
     name: 'ovation',
-    url: resolveProxyUrl(options.url, options.proxyurl),
+    url: options.url,
     config,
     retry: {
       config: {
