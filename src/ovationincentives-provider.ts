@@ -91,7 +91,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           }
         },)
 
-        if(option.debug){
+        if(options.debug){
            console.log('GARETH123')
            console.log(msg)
            console.log('SAVE CODE JSON', json)
