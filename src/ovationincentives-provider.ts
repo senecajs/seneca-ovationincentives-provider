@@ -9,6 +9,7 @@ type OvationProviderOptions = {
   proxyurl: string
   fetch: any
   debug: boolean
+  live: boolean
   entity: Record<string, Record<string, any>>
   retry: {
     config: Record<string, any>
@@ -80,10 +81,6 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           //}
         }
 
-
-        // console.log('GARETH123')
-
-        // console.log(msg)
         let url = makeUrl('api/Code')
         let requrl = resolveProxyUrl(url, options.proxyurl)
         let json = await post(requrl, {
@@ -94,13 +91,19 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           }
         },)
 
-        // console.log('SAVE CODE JSON', json)
+        if(options.debug){
+           console.log('GARETH123')
+           console.log(msg)
+           console.log('SAVE CODE JSON', json)
+        }
         let entdata = json
         //entdata.id = entdata.customer_id
         return entize(entdata)
       }
       catch (e: any) {
-        // console.log('SAVE CUSTOMER', e)
+        if(options.debug){
+          console.log('SAVE CUSTOMER', e)
+        }
         // let res = e.provider?.response
 
         throw e
@@ -137,7 +140,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
             'Content-Type': 'application/x-www-form-urlencoded',
             'x-ovationincentives-proxy-url': options.authurl
           },
-          body: `grant_type=client_credentials&scope=ovation_sandbox`
+          body: `grant_type=client_credentials&scope=`+(options.live?`ovation_api`:`ovation_sandbox`)
         }
 
 
@@ -145,16 +148,12 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
         let accessResult =
           await origFetcher(url, accessConfig)
 
-        // console.log('ACCESS RES', accessConfig, accessResult)
-
-        // console.log('access res', accessResult.status)
         if (401 === accessResult.status || 403 === accessResult.status) {
           refreshToken = null
           return true
         }
 
         let accessJSON = await accessResult.json()
-        // console.log('ACCESS JSON', accessJSON)
 
         let accessToken = accessJSON.access_token
 
@@ -170,7 +169,13 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
         currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
         config.headers['X-Client-Id'] = seneca.shared.clientid
 
-        // console.log('store end', store)
+        if(options.debug){
+          console.log('store end', store)
+          console.log('ACCESS RES', accessConfig, accessResult)
+          console.log('access res', accessResult.status)
+          console.log('ACCESS JSON', accessJSON)
+        }
+
 
         return true
 
@@ -229,6 +234,7 @@ const defaults: OvationProviderOptions = {
 
   // NOTE: include trailing /
   url: 'https://external-sandbox.ovationincentives.com/',
+  live: false,
 
   authurl: 'https://auth.ovationincentives.com/connect/token',
 

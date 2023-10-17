@@ -47,8 +47,6 @@ function OvationProvider(options) {
                     ...(msg.ent.data$(false)),
                     //}
                 };
-                // console.log('GARETH123')
-                // console.log(msg)
                 let url = makeUrl('api/Code');
                 let requrl = resolveProxyUrl(url, options.proxyurl);
                 let json = await post(requrl, {
@@ -58,13 +56,19 @@ function OvationProvider(options) {
                         'x-ovationincentives-proxy-url': url,
                     }
                 });
-                // console.log('SAVE CODE JSON', json)
+                if (options.debug) {
+                    console.log('GARETH123');
+                    console.log(msg);
+                    console.log('SAVE CODE JSON', json);
+                }
                 let entdata = json;
                 //entdata.id = entdata.customer_id
                 return entize(entdata);
             }
             catch (e) {
-                // console.log('SAVE CUSTOMER', e)
+                if (options.debug) {
+                    console.log('SAVE CUSTOMER', e);
+                }
                 // let res = e.provider?.response
                 throw e;
             }
@@ -92,18 +96,15 @@ function OvationProvider(options) {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'x-ovationincentives-proxy-url': options.authurl
                     },
-                    body: `grant_type=client_credentials&scope=ovation_sandbox`
+                    body: `grant_type=client_credentials&scope=` + (options.live ? `ovation_api` : `ovation_sandbox`)
                 };
                 let url = resolveProxyUrl(options.authurl, options.proxyurl);
                 let accessResult = await origFetcher(url, accessConfig);
-                // console.log('ACCESS RES', accessConfig, accessResult)
-                // console.log('access res', accessResult.status)
                 if (401 === accessResult.status || 403 === accessResult.status) {
                     refreshToken = null;
                     return true;
                 }
                 let accessJSON = await accessResult.json();
-                // console.log('ACCESS JSON', accessJSON)
                 let accessToken = accessJSON.access_token;
                 let store = asyncLocalStorage.getStore();
                 // console.log('store', store)
@@ -113,7 +114,12 @@ function OvationProvider(options) {
                 config.headers['Authorization'] = authContent;
                 currentConfig.headers['X-Client-Id'] = seneca.shared.clientid;
                 config.headers['X-Client-Id'] = seneca.shared.clientid;
-                // console.log('store end', store)
+                if (options.debug) {
+                    console.log('store end', store);
+                    console.log('ACCESS RES', accessConfig, accessResult);
+                    console.log('access res', accessResult.status);
+                    console.log('ACCESS JSON', accessJSON);
+                }
                 return true;
             }
             catch (e) {
@@ -152,6 +158,7 @@ function OvationProvider(options) {
 const defaults = {
     // NOTE: include trailing /
     url: 'https://external-sandbox.ovationincentives.com/',
+    live: false,
     authurl: 'https://auth.ovationincentives.com/connect/token',
     proxyurl: '',
     // Use global fetch by default - if exists

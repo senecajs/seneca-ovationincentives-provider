@@ -1,6 +1,6 @@
 {
   "name": "@seneca/ovationincentives-provider",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "main": "dist/ovationincentives-provider.js",
   "type": "commonjs",
   "types": "dist/ovationincentives-provider.d.ts",

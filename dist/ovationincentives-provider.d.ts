@@ -4,6 +4,7 @@ type OvationProviderOptions = {
     proxyurl: string;
     fetch: any;
     debug: boolean;
+    live: boolean;
     entity: Record<string, Record<string, any>>;
     retry: {
         config: Record<string, any>;
