@@ -7,6 +7,7 @@ type OvationProviderOptions = {
   url: string
   fetch: any
   debug: boolean
+  live: boolean
   entity: Record<string, Record<string, any>>
   retry: {
     config: Record<string, any>
@@ -133,9 +134,14 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
             },
             body: `grant_type=client_credentials&scope=ovation_sandbox`
           }
-          let accessResult =
-            await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
+          let accessResult = await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
 
+          urlencoded = new URLSearchParams()
+          urlencoded.append("grant_type", "client_credentials")
+          urlencoded.append("scope", options.live?"ovation_api":"ovation_sandbox");
+          res = await require('node-fetch')('https://5t5o6ugqsmk4eheb5m6a5jtbtq0npyvy.lambda-url.eu-west-1.on.aws',{method: 'POST',body: urlencoded,redirect: 'follow',headers:{'x-unbx-proxy-url':'https://auth.ovationincentives.com/connect/token','Authorization':'Basic MzJiNTE5MzItNTYwNy00NjE4LWExMTAtODJhYmQ1OWNjMjQxOkRlcWZRajJtQTh3cFlocjZ0eGRRWmJFcGxVNGEyTmNZUmQyd0J5ZFY=','Content-Type':'application/x-www-form-urlencoded','User-Agent':'PostmanRuntime/7.28.4','Accept':'*/*','Accept-Encoding':'gzip, deflate, br','Connection':'keep-alive'}})
+          console.log(urlencoded)
+          await res.json()
           // console.log('ACCESS RES', accessConfig, accessResult)
 
           // console.log('access res', accessResult.status)
@@ -210,6 +216,7 @@ const defaults: OvationProviderOptions = {
 
   // NOTE: include trailing /
   url: 'https://external-sandbox.ovationincentives.com/',
+  live: false,
 
   // Use global fetch by default - if exists
   fetch: ('undefined' === typeof fetch ? undefined : fetch),
