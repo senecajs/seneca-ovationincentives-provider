@@ -91,17 +91,17 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           }
         },)
 
-        if(options.debug){
-           console.log('GARETH123')
-           console.log(msg)
-           console.log('SAVE CODE JSON', json)
+        if (options.debug) {
+          console.log('GARETH123')
+          console.log(msg)
+          console.log('SAVE CODE JSON', json)
         }
         let entdata = json
         //entdata.id = entdata.customer_id
         return entize(entdata)
       }
       catch (e: any) {
-        if(options.debug){
+        if (options.debug) {
           console.log('SAVE CUSTOMER', e)
         }
         // let res = e.provider?.response
@@ -140,7 +140,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
             'Content-Type': 'application/x-www-form-urlencoded',
             'x-ovationincentives-proxy-url': options.authurl
           },
-          body: `grant_type=client_credentials&scope=`+(options.live?`ovation_api`:`ovation_sandbox`)
+          body: `grant_type=client_credentials&scope=` + (options.live ? `ovation_api` : `ovation_sandbox`)
         }
 
 
@@ -169,7 +169,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
         currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
         config.headers['X-Client-Id'] = seneca.shared.clientid
 
-        if(options.debug){
+        if (options.debug) {
           console.log('store end', store)
           console.log('ACCESS RES', accessConfig, accessResult)
           console.log('access res', accessResult.status)
