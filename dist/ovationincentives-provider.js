@@ -6,7 +6,9 @@ function OvationProvider(options) {
     const seneca = this;
     // Shared config reference.
     const config = {
-        headers: {}
+        headers: {
+        // 'x-ovationincentives-proxy-url': options.url
+        }
     };
     let refreshToken;
     const makeUtils = this.export('provider/makeUtils');
@@ -21,7 +23,7 @@ function OvationProvider(options) {
             }
         }
     });
-    console.log('makeUtils', 'get', get);
+    // console.log('makeUtils', 'get', get)
     async function get_info(_msg) {
         return {
             ok: true,
@@ -45,11 +47,19 @@ function OvationProvider(options) {
                     ...(msg.ent.data$(false)),
                     //}
                 };
-                let json = await post(makeUrl('api/Code'), {
-                    body
+                // console.log('GARETH123')
+                // console.log(msg)
+                let url = makeUrl('api/Code');
+                let requrl = resolveProxyUrl(url, options.proxyurl);
+                let json = await post(requrl, {
+                    body,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-ovationincentives-proxy-url': url,
+                    }
                 });
-                console.log('SAVE CODE JSON', json);
-                let entdata = json.data;
+                // console.log('SAVE CODE JSON', json)
+                let entdata = json;
                 //entdata.id = entdata.customer_id
                 return entize(entdata);
             }
@@ -61,7 +71,7 @@ function OvationProvider(options) {
         };
     entityBuilder(this, {
         provider: {
-            name: 'ovation',
+            name: 'ovationincentives',
         },
         entity
     });
@@ -79,21 +89,22 @@ function OvationProvider(options) {
                     method: 'POST',
                     headers: {
                         Authorization: seneca.shared.headers.Authorization,
-                        'Content-Type': 'application/x-www-url-form-encoded',
-                        //'X-Client-Id': seneca.shared.clientid
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'x-ovationincentives-proxy-url': options.authurl
                     },
                     body: `grant_type=client_credentials&scope=ovation_sandbox`
                 };
-                let accessResult = await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig);
+                let url = resolveProxyUrl(options.authurl, options.proxyurl);
+                let accessResult = await origFetcher(url, accessConfig);
                 // console.log('ACCESS RES', accessConfig, accessResult)
                 // console.log('access res', accessResult.status)
-                if (401 === accessResult.status) {
+                if (401 === accessResult.status || 403 === accessResult.status) {
                     refreshToken = null;
                     return true;
                 }
                 let accessJSON = await accessResult.json();
                 // console.log('ACCESS JSON', accessJSON)
-                let accessToken = accessJSON.data.access_token;
+                let accessToken = accessJSON.access_token;
                 let store = asyncLocalStorage.getStore();
                 // console.log('store', store)
                 let currentConfig = store.config;
@@ -124,6 +135,13 @@ function OvationProvider(options) {
             Authorization: 'Basic ' + auth
         };
     });
+    function resolveProxyUrl(targeturl, proxyurl) {
+        if (null == proxyurl || '' == proxyurl) {
+            return targeturl;
+        }
+        let tu = new URL(targeturl);
+        return proxyurl.replace(/\/$/, '') + tu.pathname;
+    }
     return {
         exports: {
             sdk: () => null
@@ -134,6 +152,8 @@ function OvationProvider(options) {
 const defaults = {
     // NOTE: include trailing /
     url: 'https://external-sandbox.ovationincentives.com/',
+    authurl: 'https://auth.ovationincentives.com/connect/token',
+    proxyurl: '',
     // Use global fetch by default - if exists
     fetch: ('undefined' === typeof fetch ? undefined : fetch),
     // TODO: Enable debug logging

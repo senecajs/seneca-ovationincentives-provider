@@ -5,6 +5,8 @@ const Pkg = require('../package.json')
 
 type OvationProviderOptions = {
   url: string
+  authurl: string
+  proxyurl: string
   fetch: any
   debug: boolean
   live: boolean
@@ -20,7 +22,9 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 
   // Shared config reference.
   const config: any = {
-    headers: {}
+    headers: {
+      // 'x-ovationincentives-proxy-url': options.url
+    }
   }
 
   let refreshToken: any
@@ -47,7 +51,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
   })
 
 
-  console.log('makeUtils', 'get', get)
+  // console.log('makeUtils', 'get', get)
 
   async function get_info(this: any, _msg: any) {
     return {
@@ -72,30 +76,34 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
       try {
         let body = {
           //customer_context: {
-            //...(options.entity?.customer?.save || {}),
-            ...(msg.ent.data$(false)),
+          //...(options.entity?.customer?.save || {}),
+          ...(msg.ent.data$(false)),
           //}
         }
 
-
-        console.log('GARETH123')
-
-        console.log(msg)
-
-        let json = await post(makeUrl('api/Code'), {
+        let url = makeUrl('api/Code')
+        let requrl = resolveProxyUrl(url, options.proxyurl)
+        let json = await post(requrl, {
           body,
           headers: {
             'Content-Type': 'application/json',
+            'x-ovationincentives-proxy-url': url,
           }
         },)
 
-        console.log('SAVE CODE JSON', json)
+        if(option.debug){
+           console.log('GARETH123')
+           console.log(msg)
+           console.log('SAVE CODE JSON', json)
+        }
         let entdata = json
         //entdata.id = entdata.customer_id
         return entize(entdata)
       }
       catch (e: any) {
-        // console.log('SAVE CUSTOMER', e)
+        if(options.debug){
+          console.log('SAVE CUSTOMER', e)
+        }
         // let res = e.provider?.response
 
         throw e
@@ -123,53 +131,53 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 
     if (401 === response.status) {
       try {
-          // console.log('GET ACCESS', config.headers)
+        // console.log('GET ACCESS', config.headers)
 
-          let accessConfig = {
-            method: 'POST',
-            headers: {
-              Authorization: seneca.shared.headers.Authorization,
-              'Content-Type': 'application/x-www-form-urlencoded',
-              //'X-Client-Id': seneca.shared.clientid
-            },
-            body: `grant_type=client_credentials&scope=ovation_sandbox`
-          }
-          let accessResult = await origFetcher('https://auth.ovationincentives.com/connect/token', accessConfig)
+        let accessConfig = {
+          method: 'POST',
+          headers: {
+            Authorization: seneca.shared.headers.Authorization,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'x-ovationincentives-proxy-url': options.authurl
+          },
+          body: `grant_type=client_credentials&scope=`+(options.live?`ovation_api`:`ovation_sandbox`)
+        }
 
-          urlencoded = new URLSearchParams()
-          urlencoded.append("grant_type", "client_credentials")
-          urlencoded.append("scope", options.live?"ovation_api":"ovation_sandbox");
-          res = await require('node-fetch')('https://5t5o6ugqsmk4eheb5m6a5jtbtq0npyvy.lambda-url.eu-west-1.on.aws',{method: 'POST',body: urlencoded,redirect: 'follow',headers:{'x-unbx-proxy-url':'https://auth.ovationincentives.com/connect/token','Authorization':'Basic MzJiNTE5MzItNTYwNy00NjE4LWExMTAtODJhYmQ1OWNjMjQxOkRlcWZRajJtQTh3cFlocjZ0eGRRWmJFcGxVNGEyTmNZUmQyd0J5ZFY=','Content-Type':'application/x-www-form-urlencoded','User-Agent':'PostmanRuntime/7.28.4','Accept':'*/*','Accept-Encoding':'gzip, deflate, br','Connection':'keep-alive'}})
-          console.log(urlencoded)
-          await res.json()
-          // console.log('ACCESS RES', accessConfig, accessResult)
 
-          // console.log('access res', accessResult.status)
-          if (401 === accessResult.status || 403 === accessResult.status) {
-            refreshToken = null
-            return true
-          }
+        let url = resolveProxyUrl(options.authurl, options.proxyurl)
+        let accessResult =
+          await origFetcher(url, accessConfig)
 
-          let accessJSON = await accessResult.json()
-          console.log('ACCESS JSON', accessJSON)
-
-          let accessToken = accessJSON.access_token
-
-          let store = asyncLocalStorage.getStore()
-          // console.log('store', store)
-          let currentConfig = store.config
-
-          let authContent = 'Bearer ' + accessToken
-
-          currentConfig.headers['Authorization'] = authContent
-          config.headers['Authorization'] = authContent
-
-          currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
-          config.headers['X-Client-Id'] = seneca.shared.clientid
-
-          // console.log('store end', store)
-
+        if (401 === accessResult.status || 403 === accessResult.status) {
+          refreshToken = null
           return true
+        }
+
+        let accessJSON = await accessResult.json()
+
+        let accessToken = accessJSON.access_token
+
+        let store = asyncLocalStorage.getStore()
+        // console.log('store', store)
+        let currentConfig = store.config
+
+        let authContent = 'Bearer ' + accessToken
+
+        currentConfig.headers['Authorization'] = authContent
+        config.headers['Authorization'] = authContent
+
+        currentConfig.headers['X-Client-Id'] = seneca.shared.clientid
+        config.headers['X-Client-Id'] = seneca.shared.clientid
+
+        if(options.debug){
+          console.log('store end', store)
+          console.log('ACCESS RES', accessConfig, accessResult)
+          console.log('access res', accessResult.status)
+          console.log('ACCESS JSON', accessJSON)
+        }
+
+
+        return true
 
       }
       catch (e) {
@@ -203,6 +211,16 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 
   })
 
+
+  function resolveProxyUrl(targeturl: string, proxyurl: string) {
+    if (null == proxyurl || '' == proxyurl) {
+      return targeturl
+    }
+
+    let tu = new URL(targeturl)
+    return proxyurl.replace(/\/$/, '') + tu.pathname
+  }
+
   return {
     exports: {
       sdk: () => null
@@ -217,6 +235,10 @@ const defaults: OvationProviderOptions = {
   // NOTE: include trailing /
   url: 'https://external-sandbox.ovationincentives.com/',
   live: false,
+
+  authurl: 'https://auth.ovationincentives.com/connect/token',
+
+  proxyurl: '',
 
   // Use global fetch by default - if exists
   fetch: ('undefined' === typeof fetch ? undefined : fetch),
