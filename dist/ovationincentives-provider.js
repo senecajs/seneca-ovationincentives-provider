@@ -54,6 +54,7 @@ function OvationProvider(options) {
                     headers: {
                         'Content-Type': 'application/json',
                         'x-ovationincentives-proxy-url': url,
+                        'x-ovationincentives-proxy-secret': options.proxysecret,
                     }
                 });
                 if (options.debug) {
@@ -94,7 +95,8 @@ function OvationProvider(options) {
                     headers: {
                         Authorization: seneca.shared.headers.Authorization,
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'x-ovationincentives-proxy-url': options.authurl
+                        'x-ovationincentives-proxy-url': options.authurl,
+                        'x-ovationincentives-proxy-secret': options.proxysecret,
                     },
                     body: `grant_type=client_credentials&scope=` + (options.live ? `ovation_api` : `ovation_sandbox`)
                 };
@@ -161,6 +163,7 @@ const defaults = {
     live: false,
     authurl: 'https://auth.ovationincentives.com/connect/token',
     proxyurl: '',
+    proxysecret: '',
     // Use global fetch by default - if exists
     fetch: ('undefined' === typeof fetch ? undefined : fetch),
     // TODO: Enable debug logging

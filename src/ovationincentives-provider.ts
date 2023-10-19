@@ -7,6 +7,7 @@ type OvationProviderOptions = {
   url: string
   authurl: string
   proxyurl: string
+  proxysecret: string
   fetch: any
   debug: boolean
   live: boolean
@@ -88,6 +89,7 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           headers: {
             'Content-Type': 'application/json',
             'x-ovationincentives-proxy-url': url,
+            'x-ovationincentives-proxy-secret': options.proxysecret,
           }
         },)
 
@@ -138,7 +140,8 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
           headers: {
             Authorization: seneca.shared.headers.Authorization,
             'Content-Type': 'application/x-www-form-urlencoded',
-            'x-ovationincentives-proxy-url': options.authurl
+            'x-ovationincentives-proxy-url': options.authurl,
+            'x-ovationincentives-proxy-secret': options.proxysecret,
           },
           body: `grant_type=client_credentials&scope=` + (options.live ? `ovation_api` : `ovation_sandbox`)
         }
@@ -239,6 +242,7 @@ const defaults: OvationProviderOptions = {
   authurl: 'https://auth.ovationincentives.com/connect/token',
 
   proxyurl: '',
+  proxysecret: '',
 
   // Use global fetch by default - if exists
   fetch: ('undefined' === typeof fetch ? undefined : fetch),

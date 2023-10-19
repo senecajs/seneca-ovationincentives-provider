@@ -2,6 +2,7 @@ type OvationProviderOptions = {
     url: string;
     authurl: string;
     proxyurl: string;
+    proxysecret: string;
     fetch: any;
     debug: boolean;
     live: boolean;
