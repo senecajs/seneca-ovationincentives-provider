@@ -232,8 +232,10 @@ function OvationProvider(this: any, options: OvationProviderOptions) {
 }
 
 
-// Default options.
-const defaults: OvationProviderOptions = {
+// Default options, built with the validator that Seneca passes in. Seneca 4
+// closes plain-object defaults, so retry.config, which passes through to
+// fetch-retry (see @seneca/provider), is open.
+const defaults = ({ valid }: { valid: any }) => ({
 
   // NOTE: include trailing /
   url: 'https://external-sandbox.ovationincentives.com/',
@@ -252,13 +254,13 @@ const defaults: OvationProviderOptions = {
 
   // See @seneca/provider
   retry: {
-    config: {
+    config: valid.Open({
       retryDelay: 100,
-    }
+    })
   },
 
   entity: {}
-}
+})
 
 Object.assign(OvationProvider, { defaults })
 

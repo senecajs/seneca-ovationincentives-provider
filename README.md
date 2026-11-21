@@ -7,11 +7,9 @@ Provides access to the Ovationincentives API using the Seneca *provider*
 convention. Ovationincentives API entities are represented as Seneca entities so
 that they can be accessed using the Seneca entity API and messages.
 
-See [seneca-entity](senecajs/seneca-entity) and the [Seneca Data
+See [@seneca/entity](https://github.com/senecajs/seneca-entity) and the [Seneca Data
 Entities
 Tutorial](https://senecajs.org/docs/tutorials/understanding-data-entities.html) for more details on the Seneca entity API.
-
-NOTE: underlying third party SDK needs to be replaced as out of date and has a security issue.
 
 [![npm version](https://img.shields.io/npm/v/@seneca/ovationincentives-provider.svg)](https://npmjs.com/package/@seneca/ovationincentives-provider)
 [![build](https://github.com/senecajs/seneca-ovationincentives-provider/actions/workflows/build.yml/badge.svg)](https://github.com/senecajs/seneca-ovationincentives-provider/actions/workflows/build.yml)
@@ -30,44 +28,54 @@ NOTE: underlying third party SDK needs to be replaced as out of date and has a s
 
 ```js
 
-// Setup - get the key value (<SECRET>) separately from a vault or
+// Setup - get the key values (<SECRET>) separately from a vault or
 // environment variable.
-Seneca()
-  // Get API keys using the seneca-env plugin
-  .use('env', {
+const seneca = Seneca()
+  .use('@seneca/entity')
+  // Get API keys using the @seneca/env plugin
+  .use('@seneca/env', {
     var: {
-      $OVATIONINCENTIVES_APIKEY: String,
-      $OVATIONINCENTIVES_USERTOKEN: String,
+      $OVATION_CLIENT: String,
+      $OVATION_SECRET: String,
     }
   })
-  .use('provider', {
+  .use('@seneca/provider', {
     provider: {
       ovationincentives: {
         keys: {
-          apikey: { value: '$OVATIONINCENTIVES_APIKEY' },
-          usertoken: { value: '$OVATIONINCENTIVES_USERTOKEN' },
+          ovationClient: { value: '$OVATION_CLIENT' },
+          ovationSecret: { value: '$OVATION_SECRET' },
         }
       }
     }
   })
-  .use('ovationincentives-provider')
+  .use('@seneca/ovationincentives-provider')
 
-let board = await seneca.entity('provider/ovationincentives/board')
-  .load$('<ovationincentives-board-id>')
+await seneca.ready()
 
-Console.log('BOARD', board)
+// Create a reward code.
+let code = await seneca.entity('provider/ovationincentives/code')
+  .data$({
+    SchemeId: '<scheme-id>',
+    Value: 10,
+    CurrencyCode: 'EUR',
+    CountryCode: 'IE',
+    LanguageCode: 'EN',
+    Recipient: { FirstName: 'Alice', LastName: 'Example', Email: 'alice@example.com' },
+    SendEmail: true,
+  })
+  .save$()
 
-board.desc = 'New description'
-board = await board.save$()
-
-Console.log('UPDATED BOARD', board)
+console.log('CODE', code.Code)
 
 ```
 
 ## Install
 
+Requires Seneca 4 and Node.js 24 or later.
+
 ```sh
-$ npm install @seneca/ovationincentives-provider @seneca/env
+$ npm install seneca@^4 @seneca/entity @seneca/provider @seneca/env @seneca/ovationincentives-provider
 ```
 
 
