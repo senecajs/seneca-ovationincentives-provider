@@ -1,17 +1,11 @@
 
-// IMPORTANT: assumes node-fetch@2
-const Fetch = require('node-fetch')
-
 const Seneca = require('seneca')
-
-// global.fetch = Fetch
 
 
 Seneca({ legacy: false })
   .test()
-  .use('promisify')
-  .use('entity')
-  .use('env', {
+  .use('@seneca/entity')
+  .use('@seneca/env', {
     // debug: true,
     file: [__dirname + '/local-env.js;?'],
     var: {
@@ -21,7 +15,7 @@ Seneca({ legacy: false })
       $TANGOCARD_ACCID: String,
     }
   })
-  .use('provider', {
+  .use('@seneca/provider', {
     provider: {
       tangocard: {
         keys: {
@@ -34,7 +28,6 @@ Seneca({ legacy: false })
     }
   })
   .use('../',{
-    fetch: Fetch,
     entity: {
       order: {
         save: {

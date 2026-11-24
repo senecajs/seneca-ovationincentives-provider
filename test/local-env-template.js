@@ -1,6 +1,4 @@
 module.exports = {
-  TANGOCARD_NAME: '<NAME>',
-  TANGOCARD_KEY: '<KEY>',
-  TANGOCARD_CUSTID: '<customerIdentifier>',
-  TANGOCARD_ACCID: '<accountIdentifier>',
+  OVATION_CLIENT: '<CLIENT-ID>',
+  OVATION_SECRET: '<CLIENT-SECRET>',
 }
